@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#172554">
+<title>Paper Hub — AI Question Paper Generator</title>
+<style>
+:root{--navy:#172554;--blue:#2563eb;--pale:#eff6ff;--ink:#172033;--muted:#64748b;--line:#dbe3ef;--white:#fff;--green:#047857;--shadow:0 12px 32px rgba(23,37,84,.10)}
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:var(--ink);font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:linear-gradient(125deg,#172554,#1d4ed8);color:white;padding:22px 16px 28px}
+.top{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.header-actions{display:flex;gap:8px;flex-wrap:wrap}.header-btn{border:1px solid #bfdbfe;background:transparent;color:white;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer}.owner-btn{background:white;color:#172554}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}.modal{width:min(100%,430px);background:white;color:var(--ink);border-radius:18px;padding:22px;box-shadow:0 20px 60px #0f172a55}.modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.close-btn{border:0;background:#e2e8f0;border-radius:8px;padding:7px 10px;cursor:pointer}.modal .btn{width:100%;margin-top:14px}.modal-message{font-size:13px;color:#b45309;margin-top:10px}
+
+.brand{font-size:20px;font-weight:900;letter-spacing:.2px}.tag{font-size:12px;color:#dbeafe}
+main{max-width:1000px;margin:-12px auto 40px;padding:0 14px}
+.panel{background:white;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+h1{font-size:clamp(24px,4vw,32px);line-height:1.15;margin:0 0 8px}h2{font-size:19px;margin:0 0 14px}p{margin:6px 0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.choice{display:block;text-align:left;border:1.5px solid var(--line);background:white;border-radius:13px;padding:13px;min-height:88px;cursor:pointer;color:var(--ink);font:inherit;transition:.15s}
+.choice strong{display:block;font-size:15px}.choice small{display:block;color:var(--muted);margin-top:4px}
+.choice.selected{border-color:var(--blue);background:var(--pale);box-shadow:inset 0 0 0 1px var(--blue)}
+label{display:block;font-weight:650;font-size:14px;margin:12px 0 6px}
+select,input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:12px;font:inherit;background:white;color:var(--ink)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.subjects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.subject{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+.subject input{width:auto;accent-color:var(--blue)}
+.btn{border:0;border-radius:11px;padding:13px 18px;background:var(--blue);color:white;font-weight:750;font-size:15px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}.btn.secondary{background:#e2e8f0;color:#172033}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.note{background:#fffbeb;border:1px solid #fde68a;color:#854d0e;border-radius:12px;padding:12px;font-size:13px;margin-top:12px}
+.hidden{display:none!important}.status{font-size:14px;color:var(--green);font-weight:650;margin-top:12px}
+.paper-head{border-bottom:2px solid var(--line);padding-bottom:12px;margin-bottom:14px}.q{padding:12px 0;border-bottom:1px solid #edf2f7}.q:last-child{border:0}.q p{color:var(--ink)}.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px;color:#475569;font-size:14px}
+.timer{font-weight:800;color:#b91c1c;background:#fef2f2;padding:8px 11px;border-radius:9px;display:inline-block}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:12px 20px 28px}
+@media(max-width:650px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.subjects{grid-template-columns:repeat(2,minmax(0,1fr))}.fields{grid-template-columns:1fr}.panel{padding:16px}.top{align-items:flex-start;flex-direction:column}.choice{min-height:82px}.header-actions{width:100%}.header-btn{flex:1}}
+@media print{body{background:white}.no-print,header,footer,#setup{display:none!important}main{margin:0;max-width:none}.panel{box-shadow:none;border:0;padding:0}.q{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><div class="brand">Paper Hub</div><div class="tag">AI QUESTION PAPER GENERATOR · FIRST PROTOTYPE</div></div><div class="header-actions"><button class="header-btn" id="studentSignInBtn">Student sign in</button><button class="header-btn owner-btn" id="ownerSignInBtn">Owner login</button></div></div></header>
+<main>
+<section class="panel" id="setup">
+<h1>Create your question paper</h1>
+<p>Choose an exam or school board, select the standard and subjects, then generate a practice paper.</p>
+<div style="margin-top:20px"><h2>1. Choose paper type</h2>
+<div class="grid" id="examChoices">
+<button class="choice selected" data-exam="JEE Main"><strong>JEE Main</strong><small>3 hours · 75 questions*</small></button>
+<button class="choice" data-exam="NEET"><strong>NEET</strong><small>3 hours · pattern varies*</small></button>
+<button class="choice" data-exam="MHT-CET PCM"><strong>MHT-CET (PCM)</strong><small>3 hours · PCM</small></button>
+<button class="choice" data-exam="MHT-CET PCB"><strong>MHT-CET (PCB)</strong><small>3 hours · PCB</small></button>
+<button class="choice" data-exam="JEE Advanced"><strong>JEE Advanced</strong><small>Pattern varies by year</small></button>
+<button class="choice" data-exam="Board Exam"><strong>Board Exam</strong><small>Choose standard + subjects</small></button>
+</div></div>
+<div class="fields" style="margin-top:16px">
+<div><label for="standard">2. Standard / class</label><select id="standard"><option>10</option><option>11</option><option selected>12</option></select></div>
+<div><label for="medium">3. Medium / language</label><select id="medium"><option>English</option><option>Marathi</option><option>Hindi</option></select></div>
+<div><label for="duration">4. Time limit</label><select id="duration"><option value="60">1 hour</option><option value="90">1 hour 30 minutes</option><option value="120">2 hours</option><option value="180" selected>3 hours</option></select></div>
+<div><label for="count">5. Number of questions</label><select id="count"><option>20</option><option>30</option><option selected>40</option><option>60</option><option>75</option><option>90</option><option>180</option></select></div>
+</div>
+<div style="margin-top:18px"><h2>6. Choose subjects</h2><div class="subjects" id="subjects">
+<label class="subject"><input type="checkbox" value="English"> English</label>
+<label class="subject"><input type="checkbox" value="Mathematics"> Mathematics</label>
+<label class="subject"><input type="checkbox" value="Biology"> Biology</label>
+<label class="subject"><input type="checkbox" value="Physics"> Physics</label>
+<label class="subject"><input type="checkbox" value="Chemistry"> Chemistry</label>
+</div></div>
+<div class="fields" style="margin-top:12px">
+<div><label for="topics">Topics (optional)</label><input id="topics" placeholder="e.g. Electrostatics, solutions"></div>
+<div><label for="difficulty">Difficulty</label><select id="difficulty"><option>Mixed</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
+</div>
+<div class="note">Prototype note: this demo creates sample practice questions in your browser. A real AI question generator, account login, secure student records, sponsor/referral codes and owner dashboard need a backend and an AI API connection.</div>
+<div class="actions"><button class="btn" id="generate">Generate paper</button><button class="btn secondary" id="reset">Reset choices</button></div>
+<div class="status" id="status" aria-live="polite"></div>
+</section>
+<section class="panel hidden" id="paper">
+<div class="paper-head"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><div class="brand" style="color:#172554">Paper Hub</div><h1 id="paperTitle">Practice Question Paper</h1><p id="paperMeta"></p></div><div class="timer" id="timer">03:00:00</div></div></div>
+<div class="note no-print">Practice mode: the countdown is local to this demo. Answers and marks are not saved to an owner account.</div>
+<div id="questions"></div>
+<div class="actions no-print"><button class="btn" id="submit">Submit paper</button><button class="btn secondary" id="print">Print / Save as PDF</button><button class="btn secondary" id="back">Back to setup</button></div>
+<div id="result" class="status" aria-live="polite"></div>
+</section>
+</main>
+
+<div class="modal-backdrop hidden" id="authBackdrop" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <section class="modal">
+    <div class="modal-head"><h2 id="authTitle">Student sign in</h2><button class="close-btn" id="closeAuth" aria-label="Close">✕</button></div>
+    <p id="authIntro">Sign in or create a student account.</p>
+    <div id="studentFields">
+      <label for="studentName">Full name</label><input id="studentName" autocomplete="name" placeholder="Your full name">
+      <label for="studentPhone">Phone number</label><input id="studentPhone" autocomplete="tel" inputmode="tel" placeholder="Your phone number">
+      <label for="sponsorId">Sponsor ID</label><input id="sponsorId" placeholder="Sponsor ID provided to you">
+      <label for="studentPassword">Password</label><input id="studentPassword" type="password" autocomplete="current-password" placeholder="Enter password">
+    </div>
+    <div id="ownerFields" class="hidden">
+      <label for="ownerEmail">Owner email / username</label><input id="ownerEmail" autocomplete="username" placeholder="Owner username">
+      <label for="ownerPassword">Owner password</label><input id="ownerPassword" type="password" autocomplete="current-password" placeholder="Enter owner password">
+      <div class="modal-message">Security: this prototype does not authenticate owners or verify passwords. Real owner access must be checked by a secure backend, not browser code.</div>
+    </div>
+    <button class="btn" id="authSubmit">Continue</button>
+    <div id="authMessage" class="status" aria-live="polite"></div>
+    <div class="modal-message">Demo only: form details are not saved or sent anywhere.</div>
+  </section>
+</div>
+\n<footer>Paper Hub prototype · Built to adapt to phone, tablet and desktop screens.</footer>
+<script>
+
+const authBackdrop=document.getElementById('authBackdrop');
+const studentFields=document.getElementById('studentFields');
+const ownerFields=document.getElementById('ownerFields');
+let authMode='student';
+function openAuth(mode){
+ authMode=mode;authBackdrop.classList.remove('hidden');
+ studentFields.classList.toggle('hidden',mode!=='student');ownerFields.classList.toggle('hidden',mode!=='owner');
+ document.getElementById('authTitle').textContent=mode==='owner'?'Owner login':'Student sign in';
+ document.getElementById('authIntro').textContent=mode==='owner'?'Sign in to manage student records and papers.':'Enter your student details to continue.';
+ document.getElementById('authSubmit').textContent=mode==='owner'?'Owner sign in':'Student sign in';
+ document.getElementById('authMessage').textContent='';
+}
+document.getElementById('studentSignInBtn').addEventListener('click',()=>openAuth('student'));
+document.getElementById('ownerSignInBtn').addEventListener('click',()=>openAuth('owner'));
+document.getElementById('closeAuth').addEventListener('click',()=>authBackdrop.classList.add('hidden'));
+authBackdrop.addEventListener('click',e=>{if(e.target===authBackdrop)authBackdrop.classList.add('hidden')});
+document.getElementById('authSubmit').addEventListener('click',()=>{
+ const msg=document.getElementById('authMessage');
+ if(authMode==='owner'){
+  const username=document.getElementById('ownerEmail').value.trim();
+  const password=document.getElementById('ownerPassword').value;
+  if(!username||!password){msg.style.color='#b91c1c';msg.textContent='Enter both owner username and password.';return}
+  msg.style.color='#b45309';msg.textContent='Login UI is ready, but owner authentication is not connected yet. Do not use this demo to protect real records.';
+ }else{
+  const name=document.getElementById('studentName').value.trim(),phone=document.getElementById('studentPhone').value.trim(),sponsor=document.getElementById('sponsorId').value.trim(),password=document.getElementById('studentPassword').value;
+  if(!name||!phone||!sponsor||!password){msg.style.color='#b91c1c';msg.textContent='Please fill in all fields.';return}
+  msg.style.color='#b45309';msg.textContent='Sign-in form is ready, but account creation and sponsor verification need a secure backend. Details have not been saved.';
+ }
+});
+\nconst exams=[...document.querySelectorAll('[data-exam]')];let exam='JEE Main',timerInterval=null,secondsLeft=10800,submitted=false;
+const subjectBoxes=[...document.querySelectorAll('#subjects input')];
+const defaults={
+'JEE Main':['Physics','Chemistry','Mathematics'],
+'NEET':['Physics','Chemistry','Biology'],
+'MHT-CET PCM':['Physics','Chemistry','Mathematics'],
+'MHT-CET PCB':['Physics','Chemistry','Biology'],
+'JEE Advanced':['Physics','Chemistry','Mathematics'],
+'Board Exam':['English','Mathematics','Biology','Physics','Chemistry']
+};
+const banks={
+Physics:[
+['What is the SI unit of electric charge?',['Ampere','Coulomb','Volt','Ohm'],1],
+['Which law relates current, voltage and resistance?',['Newton’s law','Ohm’s law','Faraday’s law','Hooke’s law'],1],
+['The slope of a velocity–time graph represents:',['Distance','Acceleration','Momentum','Force'],1],
+['Which quantity is a scalar?',['Displacement','Velocity','Work','Acceleration'],2],
+['The SI unit of power is:',['Joule','Watt','Newton','Pascal'],1]],
+Chemistry:[
+['The pH of a neutral aqueous solution at 25°C is approximately:',['0','5','7','14'],2],
+['Which bond involves sharing of electron pairs?',['Ionic','Covalent','Metallic only','Hydrogen only'],1],
+['The number of moles is calculated using:',['Mass × molar mass','Mass ÷ molar mass','Volume × mass','Molar mass ÷ volume'],1],
+['Which is a noble gas?',['Oxygen','Nitrogen','Neon','Chlorine'],2],
+['A catalyst generally changes the reaction rate by:',['Changing equilibrium constant','Lowering activation energy','Increasing product mass','Being fully consumed'],1]],
+Mathematics:[
+['What is the derivative of x² with respect to x?',['x','2x','x²','2'],1],
+['The value of sin 30° is:',['0','1/2','√3/2','1'],1],
+['If 2x = 10, then x = ?',['2','5','8','12'],1],
+['The sum of angles in a triangle is:',['90°','180°','270°','360°'],1],
+['The probability of a certain event is:',['0','1/4','1/2','1'],3]],
+Biology:[
+['Which organelle is commonly called the powerhouse of the cell?',['Nucleus','Mitochondrion','Ribosome','Golgi body'],1],
+['DNA stands for:',['Deoxyribonucleic acid','Dinuclear acid','Deoxyribose nitrogen atom','Double nitrogen acid'],0],
+['Photosynthesis mainly occurs in the:',['Mitochondria','Chloroplasts','Nucleus','Ribosomes'],1],
+['Which blood cells help defend the body against infection?',['Red blood cells','White blood cells','Platelets only','Plasma only'],1],
+['The basic unit of heredity is a:',['Tissue','Gene','Organ','Cell wall'],1]],
+English:[
+['Choose the correctly spelled word:',['Enviroment','Environment','Environmant','Envirnoment'],1],
+['A synonym of “brief” is:',['Short','Distant','Loud','Heavy'],0],
+['Which is a noun?',['Quickly','Beautiful','Happiness','Run'],2],
+['Choose the correct sentence:',['She go to school.','She goes to school.','She going school.','She gone to school.'],1],
+['The opposite of “ancient” is:',['Old','Historic','Modern','Past'],2]
+]};
+exams.forEach(b=>b.addEventListener('click',()=>{exams.forEach(x=>x.classList.remove('selected'));b.classList.add('selected');exam=b.dataset.exam;if(exam==='Board Exam'){document.getElementById('duration').value='180';document.getElementById('count').value='40'}else if(exam==='NEET'){document.getElementById('duration').value='180'}subjectBoxes.forEach(c=>c.checked=defaults[exam].includes(c.value));}));
+subjectBoxes.forEach(c=>c.checked=defaults[exam].includes(c.value));
+document.getElementById('generate').addEventListener('click',()=>{
+ const selected=subjectBoxes.filter(c=>c.checked).map(c=>c.value);
+ if(!selected.length){document.getElementById('status').textContent='Please choose at least one subject.';return}
+ const count=Number(document.getElementById('count').value),duration=Number(document.getElementById('duration').value);
+ const topic=document.getElementById('topics').value.trim(),standard=document.getElementById('standard').value,medium=document.getElementById('medium').value;
+ document.getElementById('paperTitle').textContent=exam+' — Practice Paper';
+ document.getElementById('paperMeta').textContent=`Standard ${standard} · ${medium} · ${selected.join(', ')} · ${count} questions · ${duration/60} hour(s)`;
+ const qroot=document.getElementById('questions');qroot.innerHTML='';
+ for(let i=0;i<count;i++){
+  const subject=selected[i%selected.length],bank=banks[subject]||banks.Physics,entry=bank[Math.floor(i/selected.length)%bank.length];
+  const div=document.createElement('div');div.className='q';
+  const p=document.createElement('p');p.textContent=`Q${i+1}. [${subject}] ${topic?'Topic focus: '+topic+' — ':''}${entry[0]}`;div.appendChild(p);
+  const opts=document.createElement('div');opts.className='options';
+  entry[1].forEach((opt,j)=>{const lab=document.createElement('label');lab.style.fontWeight='400';lab.style.margin='0';const inp=document.createElement('input');inp.type='radio';inp.name='q'+i;inp.value=j;inp.style.width='auto';inp.style.marginRight='6px';lab.append(inp,document.createTextNode(String.fromCharCode(65+j)+'. '+opt));opts.appendChild(lab)});div.appendChild(opts);
+  div.dataset.correct=entry[2];div.dataset.subject=subject;qroot.appendChild(div);
+ }
+ secondsLeft=duration*60;submitted=false;document.getElementById('result').textContent='';document.getElementById('setup').classList.add('hidden');document.getElementById('paper').classList.remove('hidden');startTimer();window.scrollTo({top:0,behavior:'smooth'});
+});
+function startTimer(){clearInterval(timerInterval);updateTimer();timerInterval=setInterval(()=>{if(submitted){clearInterval(timerInterval);return}secondsLeft--;updateTimer();if(secondsLeft<=0)submitPaper(true)},1000)}
+function updateTimer(){const h=Math.floor(secondsLeft/3600),m=Math.floor(secondsLeft%3600/60),s=secondsLeft%60;document.getElementById('timer').textContent=[h,m,s].map(x=>String(x).padStart(2,'0')).join(':')}
+function submitPaper(auto=false){if(submitted)return;submitted=true;clearInterval(timerInterval);let correct=0,answered=0;const qs=[...document.querySelectorAll('#questions .q')];qs.forEach(q=>{const picked=q.querySelector('input:checked');if(picked){answered++;if(Number(picked.value)===Number(q.dataset.correct))correct++}});document.querySelectorAll('#questions input').forEach(i=>i.disabled=true);document.getElementById('result').textContent=`${auto?'Time is up. Paper submitted.':'Paper submitted.'} Demo score: ${correct}/${qs.length}. Answered: ${answered}/${qs.length}. This result is not saved.`;document.getElementById('submit').disabled=true}
+document.getElementById('submit').addEventListener('click',()=>{if(confirm('Submit your paper now? You will not be able to change answers.'))submitPaper(false)});
+document.getElementById('print').addEventListener('click',()=>window.print());
+document.getElementById('back').addEventListener('click',()=>{if(!submitted&&!confirm('Leave this paper? Your demo answers will be lost.'))return;clearInterval(timerInterval);document.getElementById('paper').classList.add('hidden');document.getElementById('setup').classList.remove('hidden');document.getElementById('submit').disabled=false;window.scrollTo({top:0,behavior:'smooth'})});
+document.getElementById('reset').addEventListener('click',()=>{exam='JEE Main';exams.forEach(x=>x.classList.toggle('selected',x.dataset.exam===exam));subjectBoxes.forEach(c=>c.checked=defaults[exam].includes(c.value));document.getElementById('standard').value='12';document.getElementById('medium').value='English';document.getElementById('duration').value='180';document.getElementById('count').value='40';document.getElementById('topics').value='';document.getElementById('difficulty').value='Mixed';document.getElementById('status').textContent='Choices reset.'});
+</script>
+</body></html>
